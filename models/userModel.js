@@ -19,6 +19,9 @@ const userSchema = new mongoose.Schema(
 		city: {
 			type: String,
 		},
+		user_type: {
+			type: String,
+		},
 		password: {
 			type: String,
 		},

@@ -61,8 +61,15 @@ export const loginController = async (req, res) => {
 
 export const registerController = async (req, res) => {
 	try {
-		const { fullname, phone, email, city, password, confirm_password } =
-			req.body;
+		const {
+			fullname,
+			phone,
+			email,
+			city,
+			user_type,
+			password,
+			confirm_password,
+		} = req.body;
 
 		// Validate required fields
 		if (!fullname || !email || !password || !confirm_password) {
@@ -100,6 +107,7 @@ export const registerController = async (req, res) => {
 			phone,
 			email,
 			city,
+			user_type,
 			password: hashedPassword,
 			confirm_password: hashedPassword, // Store hashed version
 		});
@@ -151,6 +159,27 @@ export const getUserProfile = async (req, res) => {
 		});
 	} catch (error) {
 		console.log('Error in getUserProfile:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
+export const logoutController = async (req, res) => {
+	try {
+		// Since JWT tokens are stateless, we can't "invalidate" them on the server side
+		// without maintaining a blacklist (which would require additional storage)
+		// The logout is handled on the client side by removing the token
+
+		return res.status(200).json({
+			success: true,
+			message:
+				'Logout successful. Please remove the token from client storage.',
+		});
+	} catch (error) {
+		console.log('Error in logoutController:', error);
 		return res.status(500).json({
 			success: false,
 			message: 'Internal server error',
