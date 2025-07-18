@@ -7,7 +7,7 @@ const ProductSchema = new mongoose.Schema(
 			unique: true,
 			index: true,
 		},
-		adminId: {
+		dealerId: {
 			type: Number,
 		},
 		title: {

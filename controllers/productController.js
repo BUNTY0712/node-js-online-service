@@ -3,7 +3,7 @@ import productModel from '../models/productModel.js';
 export const createProductController = async (req, res) => {
 	try {
 		const {
-			adminId,
+			dealerId,
 			title,
 			description,
 			price,
@@ -32,11 +32,11 @@ export const createProductController = async (req, res) => {
 			});
 		}
 
-		// Validate adminId if provided
-		if (adminId && (typeof adminId !== 'number' || adminId <= 0)) {
+		// Validate dealerId if provided
+		if (dealerId && (typeof dealerId !== 'number' || dealerId <= 0)) {
 			return res.status(400).json({
 				success: false,
-				message: 'AdminId must be a positive number',
+				message: 'dealerId must be a positive number',
 			});
 		}
 
@@ -71,7 +71,7 @@ export const createProductController = async (req, res) => {
 
 		// Create product data object
 		const productData = {
-			adminId,
+			dealerId,
 			title: title.trim(),
 			description: description.trim(),
 			image: imagePath,
@@ -160,6 +160,50 @@ export const getAllProductsController = async (req, res) => {
 		});
 	}
 };
+export const getProductByIdController = async (req, res) => {
+	try {
+		const { id } = req.params;
+		if (!id) {
+			return res.status(400).json({
+				success: false,
+				message: 'Product ID is required',
+			});
+		}
+
+		// Convert id to number since the custom id field is a Number type
+		const numericId = parseInt(id);
+		if (isNaN(numericId)) {
+			return res.status(400).json({
+				success: false,
+				message: 'Invalid product ID format',
+			});
+		}
+
+		// Find product by custom id field
+		const product = await productModel.find({ dealerId: numericId });
+
+		if (!product) {
+			return res.status(404).json({
+				success: false,
+				message: 'Product not found',
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: 'Product retrieved successfully',
+			product: product,
+		});
+	} catch (error) {
+		console.error('Error in getProductByIdController:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
 export const deleteProductController = async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -210,7 +254,7 @@ export const updateProductController = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const {
-			adminId,
+			dealerId,
 			title,
 			description,
 			price,
@@ -256,14 +300,14 @@ export const updateProductController = async (req, res) => {
 			});
 		}
 
-		// Validate adminId if provided
+		// Validate dealerId if provided
 		if (
-			adminId !== undefined &&
-			(typeof adminId !== 'number' || adminId <= 0)
+			dealerId !== undefined &&
+			(typeof dealerId !== 'number' || dealerId <= 0)
 		) {
 			return res.status(400).json({
 				success: false,
-				message: 'AdminId must be a positive number',
+				message: 'dealerId must be a positive number',
 			});
 		}
 
@@ -308,7 +352,7 @@ export const updateProductController = async (req, res) => {
 		// Create update data object with only provided fields
 		const updateData = {};
 
-		if (adminId !== undefined) updateData.adminId = adminId;
+		if (dealerId !== undefined) updateData.dealerId = dealerId;
 		if (title !== undefined) updateData.title = title.trim();
 		if (description !== undefined) updateData.description = description.trim();
 		if (imagePath !== null) updateData.image = imagePath;

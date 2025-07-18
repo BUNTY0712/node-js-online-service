@@ -6,6 +6,7 @@ import {
 	getAllProductsController,
 	deleteProductController,
 	updateProductController,
+	getProductByIdController,
 } from '../controllers/productController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
@@ -17,6 +18,11 @@ router.post(
 	createProductController
 );
 router.get('/get-all-product', authenticateToken, getAllProductsController);
+router.get(
+	'/get-all-product-by-id/:id',
+	authenticateToken,
+	getProductByIdController
+);
 router.delete(
 	'/delete-product/:id',
 	authenticateToken,
