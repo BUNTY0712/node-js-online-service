@@ -33,12 +33,12 @@ export const createProductController = async (req, res) => {
 		}
 
 		// Validate dealerId if provided
-		if (dealerId && (typeof dealerId !== 'number' || dealerId <= 0)) {
-			return res.status(400).json({
-				success: false,
-				message: 'dealerId must be a positive number',
-			});
-		}
+		// if (dealerId && (typeof dealerId !== 'number' || dealerId <= 0)) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: 'dealerId must be a positive number',
+		// 	});
+		// }
 
 		// Validate price format
 		if (typeof price !== 'string' || price.trim() === '') {
@@ -49,12 +49,12 @@ export const createProductController = async (req, res) => {
 		}
 
 		// Validate phone number if provided
-		if (phone && (typeof phone !== 'number' || phone.toString().length < 10)) {
-			return res.status(400).json({
-				success: false,
-				message: 'Phone number must be a valid number with at least 10 digits',
-			});
-		}
+		// if (phone && (typeof phone !== 'number' || phone.toString().length < 10)) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: 'Phone number must be a valid number with at least 10 digits',
+		// 	});
+		// }
 
 		// Validate string fields are not empty
 		const stringFields = { title, description, shopName, category };
