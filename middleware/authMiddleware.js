@@ -29,8 +29,14 @@ const authenticateToken = async (req, res, next) => {
 			});
 		}
 
-		// Add user to request object
+		// Add user and token data to request object
 		req.user = user;
+		req.tokenData = {
+			userId: decoded.userId,
+			email: decoded.email,
+			user_type: decoded.user_type,
+			dashboardAccess: decoded.dashboardAccess,
+		};
 		next();
 	} catch (error) {
 		if (error.name === 'JsonWebTokenError') {
@@ -53,4 +59,36 @@ const authenticateToken = async (req, res, next) => {
 	}
 };
 
-export { authenticateToken };
+// Role-based access control middleware
+const requireDashboardAccess = (requiredDashboard) => {
+	return (req, res, next) => {
+		try {
+			const { tokenData } = req;
+
+			if (!tokenData || !tokenData.dashboardAccess) {
+				return res.status(403).json({
+					success: false,
+					message: 'Access denied - no dashboard permissions',
+				});
+			}
+
+			if (!tokenData.dashboardAccess.includes(requiredDashboard)) {
+				return res.status(403).json({
+					success: false,
+					message: `Access denied - ${requiredDashboard} dashboard access required`,
+				});
+			}
+
+			next();
+		} catch (error) {
+			console.log('Error in requireDashboardAccess middleware:', error);
+			return res.status(500).json({
+				success: false,
+				message: 'Internal server error',
+				error: error.message,
+			});
+		}
+	};
+};
+
+export { authenticateToken, requireDashboardAccess };
