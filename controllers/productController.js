@@ -203,7 +203,6 @@ export const getProductByIdController = async (req, res) => {
 		});
 	}
 };
-
 export const deleteProductController = async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -301,15 +300,15 @@ export const updateProductController = async (req, res) => {
 		}
 
 		// Validate dealerId if provided
-		if (
-			dealerId !== undefined &&
-			(typeof dealerId !== 'number' || dealerId <= 0)
-		) {
-			return res.status(400).json({
-				success: false,
-				message: 'dealerId must be a positive number',
-			});
-		}
+		// if (
+		// 	dealerId !== undefined &&
+		// 	(typeof dealerId !== 'number' || dealerId <= 0)
+		// ) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: 'dealerId must be a positive number',
+		// 	});
+		// }
 
 		// Validate price format if provided
 		if (
