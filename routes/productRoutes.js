@@ -7,6 +7,9 @@ import {
 	deleteProductController,
 	updateProductController,
 	getProductByIdController,
+	searchProductsByTitleController,
+	filterProductsByStateCityAreaController,
+	getMostSearchedSixProductsController,
 } from '../controllers/productController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 
@@ -33,6 +36,23 @@ router.put(
 	upload.single('image'),
 	authenticateToken,
 	updateProductController
+);
+
+// Search and filter routes
+router.get(
+	'/search-products',
+	authenticateToken,
+	searchProductsByTitleController
+);
+router.get(
+	'/filter-products',
+	authenticateToken,
+	filterProductsByStateCityAreaController
+);
+router.get(
+	'/most-searched-products',
+	authenticateToken,
+	getMostSearchedSixProductsController
 );
 
 export default router;

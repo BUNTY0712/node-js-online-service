@@ -426,3 +426,148 @@ export const updateProductController = async (req, res) => {
 		});
 	}
 };
+export const searchProductsByTitleController = async (req, res) => {
+	try {
+		const { title } = req.query;
+
+		// Check if search term is provided
+		if (!title) {
+			return res.status(400).json({
+				success: false,
+				message: 'Search title is required',
+			});
+		}
+
+		// Validate search term
+		if (typeof title !== 'string' || title.trim() === '') {
+			return res.status(400).json({
+				success: false,
+				message: 'Search title must be a non-empty string',
+			});
+		}
+
+		// Search for products using case-insensitive regex
+		const products = await productModel.find({
+			title: { $regex: title.trim(), $options: 'i' },
+		});
+
+		// Increment search count for found products
+		if (products.length > 0) {
+			await productModel.updateMany(
+				{ _id: { $in: products.map((p) => p._id) } },
+				{ $inc: { searchCount: 1 } }
+			);
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: `Found ${products.length} product(s) matching "${title}"`,
+			count: products.length,
+			products: products,
+		});
+	} catch (error) {
+		console.error('Error in searchProductsByTitleController:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+export const filterProductsByStateCityAreaController = async (req, res) => {
+	try {
+		const { state, city, area } = req.query;
+
+		// Check if at least one filter parameter is provided
+		if (!state && !city && !area) {
+			return res.status(400).json({
+				success: false,
+				message:
+					'At least one filter parameter (state, city, or area) is required',
+			});
+		}
+
+		// Build filter object dynamically
+		const filter = {};
+
+		// Add filters based on provided parameters (case-insensitive)
+		if (state) {
+			if (typeof state !== 'string' || state.trim() === '') {
+				return res.status(400).json({
+					success: false,
+					message: 'State must be a non-empty string',
+				});
+			}
+			filter.state = { $regex: state.trim(), $options: 'i' };
+		}
+
+		if (city) {
+			if (typeof city !== 'string' || city.trim() === '') {
+				return res.status(400).json({
+					success: false,
+					message: 'City must be a non-empty string',
+				});
+			}
+			filter.city = { $regex: city.trim(), $options: 'i' };
+		}
+
+		if (area) {
+			if (typeof area !== 'string' || area.trim() === '') {
+				return res.status(400).json({
+					success: false,
+					message: 'Area must be a non-empty string',
+				});
+			}
+			filter.area = { $regex: area.trim(), $options: 'i' };
+		}
+
+		// Find products matching the filter criteria
+		const products = await productModel.find(filter);
+
+		// Build descriptive message
+		const filterParts = [];
+		if (state) filterParts.push(`state: "${state}"`);
+		if (city) filterParts.push(`city: "${city}"`);
+		if (area) filterParts.push(`area: "${area}"`);
+		const filterDescription = filterParts.join(', ');
+
+		return res.status(200).json({
+			success: true,
+			message: `Found ${products.length} product(s) matching filters (${filterDescription})`,
+			count: products.length,
+			filters: { state, city, area },
+			products: products,
+		});
+	} catch (error) {
+		console.error('Error in filterProductsByStateCityAreaController:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+export const getMostSearchedSixProductsController = async (req, res) => {
+	try {
+		// Get the 6 most searched products based on searchCount field
+		const products = await productModel
+			.find({})
+			.sort({ searchCount: -1, created_at: -1 }) // Sort by search count first, then by creation date
+			.limit(6)
+			.select('-__v'); // Exclude version field
+
+		return res.status(200).json({
+			success: true,
+			message: 'Most searched products retrieved successfully',
+			count: products.length,
+			products: products,
+		});
+	} catch (error) {
+		console.error('Error in getMostSearchedSixProductsController:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};

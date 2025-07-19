@@ -49,6 +49,10 @@ const ProductSchema = new mongoose.Schema(
 		phone: {
 			type: Number,
 		},
+		searchCount: {
+			type: Number,
+			default: 0,
+		},
 	},
 	{
 		timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
