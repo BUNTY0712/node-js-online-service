@@ -322,15 +322,15 @@ export const updateProductController = async (req, res) => {
 		}
 
 		// Validate phone number if provided
-		if (
-			phone !== undefined &&
-			(typeof phone !== 'number' || phone.toString().length < 10)
-		) {
-			return res.status(400).json({
-				success: false,
-				message: 'Phone number must be a valid number with at least 10 digits',
-			});
-		}
+		// if (
+		// 	phone !== undefined &&
+		// 	(typeof phone !== 'number' || phone.toString().length < 10)
+		// ) {
+		// 	return res.status(400).json({
+		// 		success: false,
+		// 		message: 'Phone number must be a valid number with at least 10 digits',
+		// 	});
+		// }
 
 		// Validate string fields if provided
 		const stringFields = { title, description, shopName, category };
