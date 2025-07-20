@@ -1,4 +1,5 @@
 import productModel from '../models/productModel.js';
+import { generateImageUrl, convertToFullUrl } from '../utils/urlUtils.js';
 
 export const createProductController = async (req, res) => {
 	try {
@@ -20,7 +21,8 @@ export const createProductController = async (req, res) => {
 		// Handle uploaded image
 		let imagePath = null;
 		if (req.file) {
-			imagePath = `/uploads/${req.file.filename}`;
+			// Use utility function to generate full URL
+			imagePath = generateImageUrl(req, req.file.filename);
 		}
 
 		// Validate required fields
@@ -146,10 +148,20 @@ export const createProductController = async (req, res) => {
 export const getAllProductsController = async (req, res) => {
 	try {
 		const products = await productModel.find({});
+
+		// Convert any relative image paths to full URLs for backward compatibility
+		const productsWithFullUrls = products.map((product) => {
+			const productObj = product.toObject();
+			if (productObj.image) {
+				productObj.image = convertToFullUrl(req, productObj.image);
+			}
+			return productObj;
+		});
+
 		return res.status(200).json({
 			success: true,
 			message: 'Products retrieved successfully',
-			products,
+			products: productsWithFullUrls,
 		});
 	} catch (error) {
 		console.error('Error in getAllProductsController:', error);
@@ -180,19 +192,28 @@ export const getProductByIdController = async (req, res) => {
 		}
 
 		// Find product by custom id field
-		const product = await productModel.find({ dealerId: numericId });
+		const products = await productModel.find({ dealerId: numericId });
 
-		if (!product) {
+		if (!products || products.length === 0) {
 			return res.status(404).json({
 				success: false,
 				message: 'Product not found',
 			});
 		}
 
+		// Convert any relative image paths to full URLs for backward compatibility
+		const productsWithFullUrls = products.map((product) => {
+			const productObj = product.toObject();
+			if (productObj.image) {
+				productObj.image = convertToFullUrl(req, productObj.image);
+			}
+			return productObj;
+		});
+
 		return res.status(200).json({
 			success: true,
 			message: 'Product retrieved successfully',
-			product: product,
+			product: productsWithFullUrls,
 		});
 	} catch (error) {
 		console.error('Error in getProductByIdController:', error);
@@ -270,7 +291,8 @@ export const updateProductController = async (req, res) => {
 		// Handle uploaded image
 		let imagePath = null;
 		if (req.file) {
-			imagePath = `/uploads/${req.file.filename}`;
+			// Use utility function to generate full URL
+			imagePath = generateImageUrl(req, req.file.filename);
 		}
 
 		// Check if product ID is provided
@@ -459,11 +481,20 @@ export const searchProductsByTitleController = async (req, res) => {
 			);
 		}
 
+		// Convert any relative image paths to full URLs for backward compatibility
+		const productsWithFullUrls = products.map((product) => {
+			const productObj = product.toObject();
+			if (productObj.image) {
+				productObj.image = convertToFullUrl(req, productObj.image);
+			}
+			return productObj;
+		});
+
 		return res.status(200).json({
 			success: true,
 			message: `Found ${products.length} product(s) matching "${title}"`,
 			count: products.length,
-			products: products,
+			products: productsWithFullUrls,
 		});
 	} catch (error) {
 		console.error('Error in searchProductsByTitleController:', error);
@@ -524,6 +555,15 @@ export const filterProductsByStateCityAreaController = async (req, res) => {
 		// Find products matching the filter criteria
 		const products = await productModel.find(filter);
 
+		// Convert any relative image paths to full URLs for backward compatibility
+		const productsWithFullUrls = products.map((product) => {
+			const productObj = product.toObject();
+			if (productObj.image) {
+				productObj.image = convertToFullUrl(req, productObj.image);
+			}
+			return productObj;
+		});
+
 		// Build descriptive message
 		const filterParts = [];
 		if (state) filterParts.push(`state: "${state}"`);
@@ -536,7 +576,7 @@ export const filterProductsByStateCityAreaController = async (req, res) => {
 			message: `Found ${products.length} product(s) matching filters (${filterDescription})`,
 			count: products.length,
 			filters: { state, city, area },
-			products: products,
+			products: productsWithFullUrls,
 		});
 	} catch (error) {
 		console.error('Error in filterProductsByStateCityAreaController:', error);
@@ -556,11 +596,20 @@ export const getMostSearchedSixProductsController = async (req, res) => {
 			.limit(6)
 			.select('-__v'); // Exclude version field
 
+		// Convert any relative image paths to full URLs for backward compatibility
+		const productsWithFullUrls = products.map((product) => {
+			const productObj = product.toObject();
+			if (productObj.image) {
+				productObj.image = convertToFullUrl(req, productObj.image);
+			}
+			return productObj;
+		});
+
 		return res.status(200).json({
 			success: true,
 			message: 'Most searched products retrieved successfully',
 			count: products.length,
-			products: products,
+			products: productsWithFullUrls,
 		});
 	} catch (error) {
 		console.error('Error in getMostSearchedSixProductsController:', error);

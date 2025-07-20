@@ -1,30 +1,74 @@
 import { CronJob } from 'cron';
 import https from 'https';
 
-const job = new CronJob('*/14 * * * *', function () {
-	// Check if API_URL is set and valid
-	if (!process.env.API_URL) {
-		console.log('API_URL not set, skipping cron job ping');
-		return;
-	}
+const job = new CronJob(
+	'0 */14 * * * *',
+	function () {
+		// Check if API_URL is set and valid
+		if (!process.env.API_URL) {
+			console.log('API_URL not set, skipping cron job ping');
+			return;
+		}
 
-	console.log(`Sending keep-alive ping to: ${process.env.API_URL}`);
+		console.log(
+			`[${new Date().toISOString()}] Sending keep-alive ping to: ${
+				process.env.API_URL
+			}`
+		);
 
-	https
-		.get(process.env.API_URL, (res) => {
-			if (res.statusCode === 200) {
-				console.log('GET request sent successfully');
-			} else {
-				console.log('GET request failed', res.statusCode);
-			}
-		})
-		.on('error', (e) => {
-			console.error('Error while sending request', e.message);
+		const url = new URL(process.env.API_URL);
+		const options = {
+			hostname: url.hostname,
+			port: url.port || (url.protocol === 'https:' ? 443 : 80),
+			path: url.pathname || '/',
+			method: 'GET',
+			timeout: 30000, // 30 second timeout
+		};
+
+		const req = https.request(options, (res) => {
+			let data = '';
+			res.on('data', (chunk) => {
+				data += chunk;
+			});
+
+			res.on('end', () => {
+				if (res.statusCode === 200) {
+					console.log(
+						`[${new Date().toISOString()}] Keep-alive ping successful - Status: ${
+							res.statusCode
+						}`
+					);
+				} else {
+					console.log(
+						`[${new Date().toISOString()}] Keep-alive ping failed - Status: ${
+							res.statusCode
+						}`
+					);
+				}
+			});
+		});
+
+		req.on('error', (e) => {
+			console.error(
+				`[${new Date().toISOString()}] Error while sending keep-alive request:`,
+				e.message
+			);
 			console.log(
 				'This is normal if running locally - the cron job is for production deployment'
 			);
 		});
-});
+
+		req.on('timeout', () => {
+			console.log(`[${new Date().toISOString()}] Keep-alive request timed out`);
+			req.destroy();
+		});
+
+		req.end();
+	},
+	null,
+	false,
+	'UTC'
+);
 
 export default job;
 

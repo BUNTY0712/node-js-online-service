@@ -3,18 +3,28 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import job from './config/cron.js'; // Import the cron job
 
+// Load environment variables first
+dotenv.config();
+
 // Only start cron job in production or if API_URL is set
 if (process.env.NODE_ENV === 'production' || process.env.API_URL) {
-	job.start(); // Start the cron job
-	console.log('Cron job started for keep-alive pings');
+	try {
+		job.start(); // Start the cron job
+		console.log('✅ Cron job started for keep-alive pings'.green.bold);
+		console.log(
+			`🔄 Keep-alive pings will be sent every 14 minutes to: ${process.env.API_URL}`
+				.yellow
+		);
+	} catch (error) {
+		console.error('❌ Failed to start cron job:', error.message);
+	}
 } else {
-	console.log('Cron job disabled for local development');
+	console.log('⚠️  Cron job disabled for local development'.yellow);
 }
 
 import colors from 'colors';
 import cors from 'cors';
 const app = express();
-dotenv.config();
 connectDB();
 app.use(cors());
 app.use(express.json());
