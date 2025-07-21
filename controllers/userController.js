@@ -197,6 +197,51 @@ export const registerController = async (req, res) => {
 	}
 };
 
+export const updateUserProfile = async (req, res) => {
+	try {
+		const { id, ...updates } = req.body;
+
+		// Remove _id and id from updates to avoid ObjectId cast errors
+		delete updates._id;
+		delete updates.id;
+
+		if (!id) {
+			return res.status(400).json({
+				success: false,
+				message: 'User id is required in request body',
+			});
+		}
+
+		const updatedUser = await userModel.findOneAndUpdate({ id: id }, updates, {
+			new: true,
+		});
+
+		if (!updatedUser) {
+			return res.status(404).json({
+				success: false,
+				message: 'User not found',
+			});
+		}
+
+		const userResponse = updatedUser.toObject();
+		delete userResponse.password;
+		delete userResponse.confirm_password;
+
+		return res.status(200).json({
+			success: true,
+			message: 'User profile updated successfully',
+			user: userResponse,
+		});
+	} catch (error) {
+		console.log('Error in updateUserProfile:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
 export const getUserProfile = async (req, res) => {
 	try {
 		// User is already available from auth middleware

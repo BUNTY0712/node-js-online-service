@@ -9,7 +9,8 @@
 		"dev": "nodemon server.js",
 		"migrate:images": "node scripts/migrateImageUrls.js",
 		"migrate:simple": "node scripts/simpleMigrate.js",
-		"check:images": "node scripts/checkProductImages.js"
+		"check:images": "node scripts/checkProductImages.js",
+		"test:api": "node scripts/testApi.js"
 	},
 	"author": "",
 	"license": "ISC",
