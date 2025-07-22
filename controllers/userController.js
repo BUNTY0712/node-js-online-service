@@ -132,7 +132,9 @@ export const registerController = async (req, res) => {
 		const saltRounds = 10;
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-		// Create new user
+
+		// Set trial_end to 1 month from now and is_subscribed to false
+		const trialEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 		const newUser = new userModel({
 			fullname,
 			phone,
@@ -141,6 +143,8 @@ export const registerController = async (req, res) => {
 			user_type,
 			password: hashedPassword,
 			confirm_password: hashedPassword, // Store hashed version
+			trial_end: trialEndDate,
+			is_subscribed: false,
 		});
 
 		await newUser.save();

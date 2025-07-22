@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema(
 		confirm_password: {
 			type: String,
 		},
+		trial_end: {
+			type: Date,
+			default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month from now
+		},
+		is_subscribed: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	{
 		timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

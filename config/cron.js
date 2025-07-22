@@ -70,7 +70,35 @@ const job = new CronJob(
 	'UTC'
 );
 
-export default job;
+
+// Additional cron job: Check daily for users whose trial_end has passed and is_subscribed is false
+import userModel from '../models/userModel.js';
+
+const subscriptionCheckJob = new CronJob(
+	'0 0 * * *', // Every day at midnight UTC
+	async function () {
+		try {
+			const now = new Date();
+			const expiredUsers = await userModel.find({
+				trial_end: { $lt: now },
+				is_subscribed: false,
+			});
+			if (expiredUsers.length > 0) {
+				console.log(`[Subscription Check] Users with expired trial:`, expiredUsers.map(u => u.email));
+				// Optionally, you can update a field or send notification here
+			} else {
+				console.log(`[Subscription Check] No users with expired trial found at ${now.toISOString()}`);
+			}
+		} catch (err) {
+			console.error('[Subscription Check] Error:', err);
+		}
+	},
+	null,
+	false,
+	'UTC'
+);
+
+export { job, subscriptionCheckJob };
 
 // CRON JOB EXPLANATION:
 // Cron jobs are scheduled tasks that run periodically at fixed intervals

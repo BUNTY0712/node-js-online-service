@@ -1,7 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
-import job from './config/cron.js'; // Import the cron job
+import { job, subscriptionCheckJob } from './config/cron.js'; // Import both cron jobs
 
 // Load environment variables first
 dotenv.config();
@@ -9,8 +9,13 @@ dotenv.config();
 // Only start cron job in production or if API_URL is set
 if (process.env.NODE_ENV === 'production' || process.env.API_URL) {
 	try {
-		job.start(); // Start the cron job
+		job.start(); // Start the keep-alive cron job
+		subscriptionCheckJob.start(); // Start the subscription check cron job
 		console.log('✅ Cron job started for keep-alive pings'.green.bold);
+		console.log(
+			'✅ Subscription check cron job started (daily at midnight UTC)'.green
+				.bold
+		);
 		console.log(
 			`🔄 Keep-alive pings will be sent every 14 minutes to: ${process.env.API_URL}`
 				.yellow
@@ -34,8 +39,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // Routes
+
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 app.get('/', (req, res) => {
 	res.send('API is running...');
@@ -43,6 +50,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/payments', paymentRoutes); // Stripe payment endpoints
 
 // 404 middleware - must be after all routes
 app.use((req, res, next) => {
