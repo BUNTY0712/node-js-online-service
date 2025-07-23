@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
+import shopModel from '../models/shopModel.js'; // Add this import
 
 export const loginController = async (req, res) => {
 	try {
@@ -12,7 +13,7 @@ export const loginController = async (req, res) => {
 			});
 		}
 
-		// Find user by email only (no user_type required from frontend)
+		// Find user by email only
 		const user = await userModel.findOne({ email });
 		if (!user) {
 			return res.status(404).json({
@@ -28,6 +29,10 @@ export const loginController = async (req, res) => {
 				message: 'Invalid credentials',
 			});
 		}
+
+		// Find shop for this user and get shop_address
+		const shop = await shopModel.findOne({ user_id: user._id });
+		const shopAddress = shop ? shop : null;
 
 		// Remove password from response
 		const userResponse = user.toObject();
@@ -70,6 +75,7 @@ export const loginController = async (req, res) => {
 			token: token,
 			user: userResponse,
 			dashboardAccess: dashboardAccess,
+			shopAddress: shopAddress, // Add shop address to response
 		});
 	} catch (error) {
 		console.log('Error in loginController:', error);
@@ -131,7 +137,6 @@ export const registerController = async (req, res) => {
 		// Hash the password
 		const saltRounds = 10;
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
-
 
 		// Set trial_end to 1 month from now and is_subscribed to false
 		const trialEndDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
