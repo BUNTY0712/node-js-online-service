@@ -43,6 +43,7 @@ app.use('/uploads', express.static('uploads'));
 import userRoutes from './routes/userRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import shopRoutes from './routes/shopRoutes.js';
 
 app.get('/', (req, res) => {
 	res.send('API is running...');
@@ -50,6 +51,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/shops', shopRoutes); // Shop routes
 app.use('/api/payments', paymentRoutes); // Stripe payment endpoints
 
 // 404 middleware - must be after all routes
