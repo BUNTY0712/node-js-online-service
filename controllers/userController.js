@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
+import mongoose from 'mongoose';
 import shopModel from '../models/shopModel.js'; // Add this import
 
 export const loginController = async (req, res) => {
@@ -318,6 +319,70 @@ export const checkDashboardAccess = async (req, res) => {
 		});
 	} catch (error) {
 		console.log('Error in checkDashboardAccess:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
+export const getUserByIdController = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		if (!id) {
+			return res.status(400).json({
+				success: false,
+				message: 'User id is required',
+			});
+		}
+
+		let user = null;
+		// Try to find by ObjectId if valid
+		if (mongoose.Types.ObjectId.isValid(id)) {
+			user = await userModel.findById(id);
+		}
+		// If not found, try to find by numeric id field
+		if (!user && !isNaN(Number(id))) {
+			user = await userModel.findOne({ id: Number(id) });
+		}
+
+		if (!user) {
+			return res.status(404).json({
+				success: false,
+				message: 'User not found',
+			});
+		}
+
+		const userResponse = user.toObject();
+		delete userResponse.password;
+		delete userResponse.confirm_password;
+
+		// Build dashboardAccess based on user_type
+		let dashboardAccess = [];
+		switch (user.user_type) {
+			case 'dealer':
+				dashboardAccess = ['customer', 'dealer'];
+				break;
+			case 'customer':
+				dashboardAccess = ['customer'];
+				break;
+			case 'admin':
+				dashboardAccess = ['dealer', 'customer', 'admin'];
+				break;
+			default:
+				dashboardAccess = ['customer'];
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: 'User profile retrieved successfully',
+			user: userResponse,
+			dashboardAccess: dashboardAccess,
+		});
+	} catch (error) {
+		console.log('Error in getUserByIdController:', error);
 		return res.status(500).json({
 			success: false,
 			message: 'Internal server error',

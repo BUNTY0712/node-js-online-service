@@ -7,6 +7,7 @@ import {
 	logoutController,
 	checkDashboardAccess,
 	updateUserProfile,
+	getUserByIdController,
 } from '../controllers/userController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
@@ -18,6 +19,7 @@ router.post('/register', registerController);
 router.get('/profile', authenticateToken, getUserProfile);
 router.post('/logout', authenticateToken, logoutController);
 router.post('/update-profile', authenticateToken, updateUserProfile);
+router.get('/get-user-by-id/:id', authenticateToken, getUserByIdController);
 router.get(
 	'/check-dashboard-access/:dashboard',
 	authenticateToken,
