@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import mongoose from 'mongoose';
 import shopModel from '../models/shopModel.js'; // Add this import
+import crypto from 'crypto';
+import transporter from '../utils/emailTransporter.js';
 
 export const loginController = async (req, res) => {
 	try {
@@ -383,6 +385,99 @@ export const getUserByIdController = async (req, res) => {
 		});
 	} catch (error) {
 		console.log('Error in getUserByIdController:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
+// 1. Request password reset (send email with token)
+export const requestPasswordReset = async (req, res) => {
+	try {
+		const { email } = req.body;
+		if (!email) {
+			return res
+				.status(400)
+				.json({ success: false, message: 'Email is required' });
+		}
+		const user = await userModel.findOne({ email });
+		if (!user) {
+			return res
+				.status(404)
+				.json({ success: false, message: 'User not found' });
+		}
+		// Generate token
+		const resetToken = crypto.randomBytes(32).toString('hex');
+		const resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
+		user.resetPasswordToken = resetToken;
+		user.resetPasswordExpires = resetTokenExpiry;
+		await user.save();
+
+		// Send email
+		const resetUrl = `${
+			process.env.FRONTEND_URL || 'http://localhost:3000'
+		}/reset-password/${resetToken}`;
+		const mailOptions = {
+			from: process.env.EMAIL_USER,
+			to: user.email,
+			subject: 'Password Reset Request',
+			html: `<p>You requested a password reset.</p><p>Click <a href="${resetUrl}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
+		};
+		await transporter.sendMail(mailOptions);
+
+		return res
+			.status(200)
+			.json({ success: true, message: 'Password reset email sent' });
+	} catch (error) {
+		console.log('Error in requestPasswordReset:', error);
+		return res.status(500).json({
+			success: false,
+			message: 'Internal server error',
+			error: error.message,
+		});
+	}
+};
+
+// 2. Reset password (with token)
+export const resetPassword = async (req, res) => {
+	try {
+		const { token } = req.params;
+		const { password, confirm_password } = req.body;
+		if (!password || !confirm_password) {
+			return res.status(400).json({
+				success: false,
+				message: 'Password and confirm password are required',
+			});
+		}
+		if (password !== confirm_password) {
+			return res
+				.status(400)
+				.json({ success: false, message: 'Passwords do not match' });
+		}
+		const user = await userModel.findOne({
+			resetPasswordToken: token,
+			resetPasswordExpires: { $gt: Date.now() },
+		});
+		if (!user) {
+			return res
+				.status(400)
+				.json({ success: false, message: 'Invalid or expired token' });
+		}
+		// Hash new password
+		const saltRounds = 10;
+		const hashedPassword = await bcrypt.hash(password, saltRounds);
+		user.password = hashedPassword;
+		user.confirm_password = hashedPassword;
+		user.resetPasswordToken = undefined;
+		user.resetPasswordExpires = undefined;
+		await user.save();
+		return res
+			.status(200)
+			.json({ success: true, message: 'Password reset successful' });
+	} catch (error) {
+		console.log('Error in resetPassword:', error);
 		return res.status(500).json({
 			success: false,
 			message: 'Internal server error',

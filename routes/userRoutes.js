@@ -8,9 +8,15 @@ import {
 	checkDashboardAccess,
 	updateUserProfile,
 	getUserByIdController,
+	requestPasswordReset,
+	resetPassword,
 } from '../controllers/userController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 const router = express.Router();
+
+// Password reset routes
+router.post('/request-password-reset', requestPasswordReset);
+router.post('/reset-password/:token', resetPassword);
 
 router.post('/login-user', loginController);
 router.post('/register', registerController);

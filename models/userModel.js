@@ -28,6 +28,15 @@ const userSchema = new mongoose.Schema(
 		confirm_password: {
 			type: String,
 		},
+		// Add fields for password reset
+		resetPasswordToken: {
+			type: String,
+			default: undefined,
+		},
+		resetPasswordExpires: {
+			type: Date,
+			default: undefined,
+		},
 		trial_end: {
 			type: Date,
 			default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 1 month from now
