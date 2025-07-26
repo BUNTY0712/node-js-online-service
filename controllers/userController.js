@@ -1,5 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 import userModel from '../models/userModel.js';
 import mongoose from 'mongoose';
 import shopModel from '../models/shopModel.js'; // Add this import
@@ -425,6 +427,7 @@ export const requestPasswordReset = async (req, res) => {
 			subject: 'Password Reset Request',
 			html: `<p>You requested a password reset.</p><p>Click <a href="${resetUrl}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
 		};
+		console.log('Reset URL:', resetUrl);
 		await transporter.sendMail(mailOptions);
 
 		return res
