@@ -417,17 +417,20 @@ export const requestPasswordReset = async (req, res) => {
 		user.resetPasswordExpires = resetTokenExpiry;
 		await user.save();
 
-		// Send email
-		const resetUrl = `${
-			process.env.FRONTEND_URL || 'http://localhost:3000'
-		}/reset-password/${resetToken}`;
+		// Only Expo deep link
+		const expoBaseUrl = process.env.FRONTEND_URL;
+		const expoUrl = `${expoBaseUrl}/reset-password/${resetToken}`;
 		const mailOptions = {
 			from: process.env.EMAIL_USER,
 			to: user.email,
 			subject: 'Password Reset Request',
-			html: `<p>You requested a password reset.</p><p>Click <a href="${resetUrl}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
+			html: `
+				<p>You requested a password reset.</p>
+				<p>Copy and paste this link into Expo Go to reset your password (valid for 1 hour):<br>
+				<b>${expoUrl}</b></p>
+			`,
 		};
-		console.log('Reset URL:', resetUrl);
+		console.log('Expo Reset URL:', expoUrl);
 		await transporter.sendMail(mailOptions);
 
 		return res
